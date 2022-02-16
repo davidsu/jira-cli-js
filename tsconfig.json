@@ -1,30 +1,30 @@
 {
   "compilerOptions": {
-	"baseUrl": ".",
-	"allowSyntheticDefaultImports": true, // To provide backwards compatibility, Node.js allows you to import most CommonJS packages with a default import. This flag tells TypeScript that it's okay to use import on CommonJS modules.
-	"declaration": true,
-	"esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility. */
-	"forceConsistentCasingInFileNames": true,
-	"jsx": "react",
-	"module": "commonjs",                                /* Specify what module code is generated. */
-	"moduleResolution": "node",
-	"noEmitOnError": true,
-	"noFallthroughCasesInSwitch": true,
-	"noImplicitAny": false,                            /* Enable error reporting for expressions and declarations with an implied `any` type.. */
-	"noImplicitOverride": true,
-	"noImplicitReturns": true,
-	"noPropertyAccessFromIndexSignature": true,
-	"noUncheckedIndexedAccess": true,
-	"noUnusedLocals": true,
-	"noUnusedParameters": true,
-	"outDir": "./dist",                                   /* Specify an output folder for all emitted files. */
-	"plugins": [{ "transform": "typescript-transform-paths", "afterDeclarations": true }],
-	"skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
-	"strict": true,                                      /* Enable all strict type-checking options. */
-	"target": "esnext",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-	"useDefineForClassFields": true,
-	"paths": {
-	  "#utils": ["utils/index"],
-	}
+    "baseUrl": ".",
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true, // To provide backwards compatibility, Node.js allows you to import most CommonJS packages with a default import. This flag tells TypeScript that it's okay to use import on CommonJS modules.
+    "declaration": true,
+    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility. */
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
+    "module": "commonjs",                                /* Specify what module code is generated. */
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,                            /* Enable error reporting for expressions and declarations with an implied `any` type.. */
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "./dist",                                   /* Specify an output folder for all emitted files. */
+    "plugins": [{ "transform": "typescript-transform-paths", "afterDeclarations": true }],
+    "skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
+    "strict": true,                                      /* Enable all strict type-checking options. */
+    "target": "esnext",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "useDefineForClassFields": true,
+    "paths": {
+      "#utils": ["utils/index"],
+    }
   }
 }
