@@ -10,19 +10,12 @@
     "module": "commonjs",                                /* Specify what module code is generated. */
     "moduleResolution": "node",
     "noEmitOnError": true,
-    "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,                            /* Enable error reporting for expressions and declarations with an implied `any` type.. */
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "outDir": "./dist",                                   /* Specify an output folder for all emitted files. */
     "plugins": [{ "transform": "typescript-transform-paths", "afterDeclarations": true }],
     "skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
     "strict": true,                                      /* Enable all strict type-checking options. */
-    "target": "esnext",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-    "useDefineForClassFields": true,
+    "target": "ES2021",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
     "paths": {
       "#utils": ["utils/index"],
     }
