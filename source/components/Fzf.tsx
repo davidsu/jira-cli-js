@@ -29,8 +29,7 @@ function makeDisplayList(
     </>
   )
 }
-const App = ({ list, header }: { list: Array<string>; header: string }) => {
-  console.log({ list })
+const Fzf = ({ list, header }: { list: Array<string>; header: string }) => {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const { height, width } = useScreenSize()
@@ -75,4 +74,4 @@ const App = ({ list, header }: { list: Array<string>; header: string }) => {
   )
 }
 
-export default App
+export default Fzf
