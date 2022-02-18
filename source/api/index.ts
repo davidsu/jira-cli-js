@@ -141,19 +141,29 @@ const fetchJson = (url, options = state.opts, refresh = false) => {
   return cacheResult(url, options, serverRequest())
 }
 
+const fetchJson2 = (url, options = state.opts) => {
+  const cacheFile = `/tmp/jira-cache/${hash({ url, options })}.json`
+
+  const serverRequest = fetch(url, options)
+    .then(r => r.json())
+    .catch(e => console.error(e))
+
+  return {
+    server: serverRequest,
+    cache: cacheResult(url, options, serverRequest),
+    cacheFile,
+  }
+}
+
 const getUrl = path => `${state.apiRoot}${state.apiPath}${path}`
-export async function search(params = state.JQL, refresh = false) {
+export function search(params = state.JQL) {
   //todo hacky. this must be related to some version the account is in.
   const prefix = /dchamud/.test(state.apiRoot) ? '' : 'jql='
   const url = `${getUrl('search')}?${prefix}${params}&maxResults=100`
-  return fetchJson(
-    url,
-    {
-      method: 'GET',
-      headers: state.headers,
-    },
-    refresh
-  )
+  return fetchJson2(url, {
+    method: 'GET',
+    headers: state.headers,
+  })
 }
 
 //@ts-ignore
