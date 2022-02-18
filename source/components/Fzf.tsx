@@ -59,7 +59,7 @@ const Fzf = ({ list, header }: { list: Array<string>; header: string }) => {
         result = fuse.search(_query).map(({ item }) => item) as string[]
       }
       setFilteredList(result)
-    }, 50),
+    }, 90),
     [list, fuse, query]
   )
   useEffect(p, [list, fuse, query])
