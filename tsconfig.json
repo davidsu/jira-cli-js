@@ -9,7 +9,7 @@
     "jsx": "react",
     "module": "commonjs",                                /* Specify what module code is generated. */
     "moduleResolution": "node",
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "noImplicitAny": false,                            /* Enable error reporting for expressions and declarations with an implied `any` type.. */
     "outDir": "./dist",                                   /* Specify an output folder for all emitted files. */
     "plugins": [{ "transform": "typescript-transform-paths", "afterDeclarations": true }],

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Text, Box } from 'ink'
 import TextInput from './TextInput'
 import Fuse from 'fuse.js'
@@ -29,9 +29,21 @@ function makeDisplayList(
     </>
   )
 }
+
+function debounce(func, timeout = 300) {
+  let timer
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      func(...args)
+    }, timeout)
+  }
+}
+
 const Fzf = ({ list, header }: { list: Array<string>; header: string }) => {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
+  const [filteredList, setFilteredList] = useState(list)
   const { height, width } = useScreenSize()
 
   const fuse = useMemo(
@@ -39,11 +51,18 @@ const Fzf = ({ list, header }: { list: Array<string>; header: string }) => {
       new Fuse(list, { useExtendedSearch: true, includeMatches: true, ignoreLocation: true, ignoreFieldNorm: true }),
     [list]
   )
-
-  const filteredList = useMemo(() => {
-    if (!fuse.search || !query) return list //.slice(0, height - 3)
-    return fuse.search(query).map(({ item }) => item) as string[]
-  }, [list, fuse, query])
+  const p = useCallback(
+    debounce(() => {
+      let result = list
+      const _query = (query || '').replace(/'\s*$/, '')
+      if (fuse.search && _query) {
+        result = fuse.search(_query).map(({ item }) => item) as string[]
+      }
+      setFilteredList(result)
+    }, 50),
+    [list, fuse, query]
+  )
+  useEffect(p, [list, fuse, query])
 
   const focusedIdx = useMemo(() => Math.max(filteredList.indexOf(focusId), 0), [filteredList, focusId])
 
