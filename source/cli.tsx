@@ -3,12 +3,15 @@ import React from 'react'
 import { render, useApp, useInput } from 'ink'
 import App from './components/FuzzyList'
 
-const enterAltScreenCommand = '\x1b[?1049h'
-const leaveAltScreenCommand = '\x1b[?1049l'
-process.stdout.write(enterAltScreenCommand)
-process.on('exit', () => {
-  process.stdout.write(leaveAltScreenCommand)
-})
+const debug = process.argv.includes('--debug')
+if (!debug) {
+  const enterAltScreenCommand = '\x1b[?1049h'
+  const leaveAltScreenCommand = '\x1b[?1049l'
+  process.stdout.write(enterAltScreenCommand)
+  process.on('exit', () => {
+    process.stdout.write(leaveAltScreenCommand)
+  })
+}
 
 const Wrapper = ({ children }: { children: any }) => {
   const { exit } = useApp()
@@ -24,5 +27,6 @@ const Wrapper = ({ children }: { children: any }) => {
 render(
   <Wrapper>
     <App />
-  </Wrapper>
+  </Wrapper>,
+  { debug }
 )
