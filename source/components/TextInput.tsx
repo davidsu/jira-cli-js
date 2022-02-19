@@ -117,6 +117,10 @@ const TextInput: FC<Props> = ({
 
   useInput(
     (input, key) => {
+      Object.assign(key, {
+        delete: key.delete && key.meta,
+        backspace: key.delete && !key.meta,
+      })
       if (key.upArrow || key.downArrow || (key.ctrl && input === 'c') || key.tab || (key.shift && key.tab)) {
         return
       }
@@ -132,7 +136,7 @@ const TextInput: FC<Props> = ({
         onChange('')
         return
       }
-      if (key.ctrl || key.meta) {
+      if (key.ctrl) {
         onCombo?.(input, key)
         return
       }
@@ -157,7 +161,9 @@ const TextInput: FC<Props> = ({
         if (showCursor) {
           nextCursorOffset++
         }
-      } else if (key.backspace || key.delete) {
+      } else if (key.delete) {
+        nextValue = originalValue.slice(0, cursorOffset) + originalValue.slice(cursorOffset + 1, originalValue.length)
+      } else if (key.backspace) {
         if (cursorOffset > 0) {
           nextValue = originalValue.slice(0, cursorOffset - 1) + originalValue.slice(cursorOffset, originalValue.length)
 
