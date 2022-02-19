@@ -1,32 +1,19 @@
 #!/usr/bin/env node
 import React from 'react'
-import { render, useApp, useInput } from 'ink'
 import App from './components/FuzzyList'
+import blessed from 'blessed'
+import { render } from 'react-blessed'
 
-const debug = process.argv.includes('--debug')
-if (!debug) {
-  const enterAltScreenCommand = '\x1b[?1049h'
-  const leaveAltScreenCommand = '\x1b[?1049l'
-  process.stdout.write(enterAltScreenCommand)
-  process.on('exit', () => {
-    process.stdout.write(leaveAltScreenCommand)
-  })
+//@ts-ignore
+global.requestAnimationFrame = f => {
+  setImmediate(() => f(Date.now()))
 }
+global.cancelAnimationFrame = () => {}
+const screen = blessed.screen({
+  autoPadding: true,
+  smartCSR: true,
+  title: 'whatever',
+})
 
-const Wrapper = ({ children }: { children: any }) => {
-  const { exit } = useApp()
-  useInput((input, key) => {
-    if (key.escape) {
-      setTimeout(() => process.exit(0), 50)
-      exit()
-    }
-  })
-  return <>{children}</>
-}
-
-render(
-  <Wrapper>
-    <App />
-  </Wrapper>,
-  { debug }
-)
+screen.key(['escape', 'C-c', 'q'], () => process.exit(0))
+render(<App />, screen)

@@ -1,8 +1,6 @@
 import chalk from 'chalk'
 import type Fuse from 'fuse.js'
-import { Box, Text } from 'ink'
 import React from 'react'
-import useScreenSize from './useScreenSize'
 type Props = {
   list: Fuse.FuseResult<string>[]
   focusedIdx: number
@@ -31,15 +29,13 @@ function createMatchedTextNode(fuseItem: Fuse.FuseResult<string>, width: number)
   return coloredItem
 }
 
-function createRow(fuseItem: Fuse.FuseResult<string>, width: number, focusId: string) {
+function createRow(fuseItem: Fuse.FuseResult<string>, width: number, focusId: string, idx: number) {
   let coloredItem = createMatchedTextNode(fuseItem, width)
-  const props = fuseItem.item === focusId ? { backgroundColor: '#303030', color: '#FFFFFF' } : {}
+  const color = fuseItem.item === focusId ? chalk.bgHex('#303000').hex('#FFE')(coloredItem) : coloredItem
   return (
-    <Box key={fuseItem.item} flexGrow={4}>
-      <Text {...props} wrap="truncate-end">
-        {coloredItem}
-      </Text>
-    </Box>
+    <text top={2 + idx} key={fuseItem.item}>
+      {color}
+    </text>
   )
 }
 
@@ -52,17 +48,12 @@ const createRows = (
 ) =>
   list
     .slice(Math.max(focusedIdx - height + 3, 0), Math.max(height - 2, focusedIdx + 1))
-    .map(fuseItem => createRow(fuseItem, width, focusId))
+    .map((fuseItem, idx) => createRow(fuseItem, width, focusId, idx))
 
 const List = React.memo(function List({ list, focusedIdx, focusId }: Props) {
-  const { height, width } = useScreenSize()
-  const fillHeight = Math.max(height - 3 - list.length, 0)
-  return (
-    <>
-      {createRows(list, focusedIdx, focusId, width, height)}
-      <Box height={fillHeight} />
-    </>
-  )
+  const width = process.stdout.columns
+  const height = process.stdout.rows
+  return <>{createRows(list, focusedIdx, focusId, width, height)}</>
 })
 
 export default List
