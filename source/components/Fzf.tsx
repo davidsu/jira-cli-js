@@ -1,67 +1,9 @@
 /* eslint-disable no-case-declarations */
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Text, Box } from 'ink'
+import List from './List'
 import TextInput from './TextInput'
 import Fuse from 'fuse.js'
-import useScreenSize from './useScreenSize.js'
-import chalk from 'chalk'
-
-function createMatchedTextNode(fuseItem: Fuse.FuseResult<string>, width: number) {
-  let coloredItem = fuseItem.item.substring(0, width)
-  if (fuseItem.matches?.length) {
-    const indices = [...fuseItem.matches[fuseItem.matches.length - 1].indices].sort(([sa], [sb]) => sa - sb)
-    let last = Number.POSITIVE_INFINITY
-    for (let i = indices.length - 1; i >= 0; i--) {
-      let [start, finish] = indices[i]
-      finish = Math.min(finish, last - 1)
-      last = Math.min(start, last)
-      if (finish < width && finish - start > 1) {
-        coloredItem =
-          coloredItem.substring(0, start) +
-          chalk.green(coloredItem.substring(start, finish + 1)) +
-          coloredItem.substring(finish + 1)
-      }
-    }
-  }
-  return coloredItem
-}
-
-function createRow(fuseItem: Fuse.FuseResult<string>, width: number, focusId: string) {
-  let coloredItem = createMatchedTextNode(fuseItem, width)
-  const props = fuseItem.item === focusId ? { backgroundColor: '#303030', color: '#FFFFFF' } : {}
-  return (
-    <Box key={fuseItem.item} flexGrow={4}>
-      <Text {...props}>{coloredItem}</Text>
-    </Box>
-  )
-}
-
-const createRows = (
-  list: Fuse.FuseResult<string>[],
-  focusedIdx: number,
-  focusId: string,
-  width: number,
-  height: number
-) =>
-  list
-    .slice(Math.max(focusedIdx - height + 3, 0), Math.max(height - 2, focusedIdx + 1))
-    .map(fuseItem => createRow(fuseItem, width, focusId))
-
-function makeDisplayList(
-  list: Fuse.FuseResult<string>[],
-  focusedIdx: number,
-  focusId: string,
-  width: number,
-  height: number
-) {
-  const fillHeight = Math.max(height - 3 - list.length, 0)
-  return (
-    <>
-      {createRows(list, focusedIdx, focusId, width, height)}
-      <Box height={fillHeight} />
-    </>
-  )
-}
 
 function debounce(func, timeout = 300) {
   let timer
@@ -77,7 +19,6 @@ const Fzf = ({ list, header }: { list: Array<string>; header: string }) => {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<string>[])
-  const { height, width } = useScreenSize()
 
   const fuse = useMemo(
     () =>
@@ -123,17 +64,30 @@ const Fzf = ({ list, header }: { list: Array<string>; header: string }) => {
       }
     }
   }
+  const maxFilterIndicatorLength = useMemo(() => {
+    let calc = list.length
+    let length = 0
+    while (calc >= 1) {
+      length++
+      calc /= 10
+    }
+    length = Math.max(length, 1)
+    return 3 + length * 2
+  }, [list])
+  const filteredIndicator = `(${list.length}/${filteredList.length})`
+  const filteredIndicatorDisplay =
+    filteredIndicator + '\u00A0'.repeat(maxFilterIndicatorLength - filteredIndicator.length)
   return (
     <Box flexDirection="column" height="100%">
       <Box width={'100%'} height={1}>
-        <Text color="yellow">{`(${list.length}/${filteredList.length})`}</Text>
-        <Text color="cyan">&gt;&nbsp;</Text>
+        <Text color="yellow">{filteredIndicatorDisplay}</Text>
+        <Text color="cyan"> &gt;&nbsp; </Text>
         <TextInput value={query} onChange={setQuery} onCombo={onCombo}></TextInput>
       </Box>
       <Box>
-        <Text>{header}</Text>
+        <Text wrap="truncate-end">{header}</Text>
       </Box>
-      {makeDisplayList(filteredList, focusedIdx, focusId, width, height)}
+      <List list={filteredList} focusedIdx={focusedIdx} focusId={focusId} />
     </Box>
   )
 }
