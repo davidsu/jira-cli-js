@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-undef
 module.exports = {
   ignorePatterns: ['node_modules/', 'dist/'],
   root: true,
@@ -31,6 +30,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-shadow': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { vars: 'all', args: 'none', ignoreRestSiblings: true }],
+    'no-undef': 'off',
     'prettier/prettier': 'error',
     'linebreak-style': ['error', 'unix'],
     'max-lines-per-function': ['error', { skipBlankLines: true, skipComments: true, max: 230 }],

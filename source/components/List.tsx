@@ -31,7 +31,7 @@ function createMatchedTextNode(fuseItem: Fuse.FuseResult<string>, width: number)
 
 function createRow(fuseItem: Fuse.FuseResult<string>, width: number, focusId: string, idx: number) {
   let coloredItem = createMatchedTextNode(fuseItem, width)
-  const color = fuseItem.item === focusId ? chalk.bgHex('#303000').hex('#FFE')(coloredItem) : coloredItem
+  const color = fuseItem.item === focusId ? chalk.bgHex('#303000').hex('#FeFeFe')(coloredItem) : coloredItem
   return (
     <text top={2 + idx} key={fuseItem.item}>
       {color}
