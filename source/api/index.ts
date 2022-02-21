@@ -1,5 +1,4 @@
 import type { RequestInit } from 'node-fetch'
-import { exec } from 'child_process'
 import nodeFetch from 'node-fetch'
 import fs from 'fs-extra'
 import yml from 'YAML'
@@ -69,6 +68,7 @@ function createCurlCommand(url, options, encode = true) {
   return str
 }
 
+const sep = key => chalk.grey('-'.repeat(40) + key + '-'.repeat(40))
 function requestDebugger(url, options) {
   if (debug) {
     console.log(sep('url'))
@@ -103,197 +103,42 @@ const fetch = (url: string, options = state.opts) => {
 }
 
 const cacheResult = (url, options, promise) => {
+  let cache = null
+  let cacheFile = ''
   if (options.method === 'GET') {
+    cacheFile = `/tmp/jira-cache/${hash({ url, options })}.json`
     fs.ensureDir('/tmp/jira-cache')
 
     promise.then(json => fs.writeJSONSync(cacheFile, json))
 
     // todo: maybe we'd rather save cache to a location that will hold on computer restart... just a thought.
-    const cacheFile = `/tmp/jira-cache/${hash({ url, options })}.json`
 
     if (fs.existsSync(cacheFile)) {
       // return fs.readJson(cacheFile);
-      return Promise.any([fs.readJson(cacheFile), promise])
+      cache = fs.readJson(cacheFile)
     }
   }
-  return promise
-}
-
-const fetchJson = (url, options = state.opts, refresh = false) => {
-  const cacheFile = `/tmp/jira-cache/${hash({ url, options })}.json`
-
-  const serverRequest = () =>
-    fetch(url, options)
-      .then(r => r.json())
-      .catch(e => console.error(e))
-
-  if (!refresh && fs.existsSync(cacheFile)) {
-    const curl = createCurlCommand(url, options)
-    requestDebugger(url, options)
-    const t = exec(`${curl} > ${cacheFile}`)
-    t.unref()
-    return fs.readJson(cacheFile).catch(serverRequest)
-  }
-
-  if (refresh) {
-    return serverRequest()
-  }
-  return cacheResult(url, options, serverRequest())
+  return { cache, cacheFile }
 }
 
 const getUrl = path => `${state.apiRoot}${state.apiPath}${path}`
 
-const fetchJson2 = (url, options = state.opts) => {
-  const cacheFile = `/tmp/jira-cache/${hash({ url, options })}.json`
-
+const fetchJson = (url, options = state.opts) => {
   const serverRequest = fetch(url, options)
     .then(r => r.json())
     .catch(e => console.error(e))
 
   return {
     server: serverRequest,
-    cache: cacheResult(url, options, serverRequest),
-    cacheFile,
+    ...cacheResult(url, options, serverRequest),
   }
 }
 export function search(params = state.JQL) {
   //todo hacky. this must be related to some version the account is in.
   const prefix = /dchamud/.test(state.apiRoot) ? '' : 'jql='
   const url = `${getUrl('search')}?${prefix}${params}&maxResults=100`
-  return fetchJson2(url, {
+  return fetchJson(url, {
     method: 'GET',
     headers: state.headers,
   })
-}
-
-//@ts-ignore
-export async function addIssueToEpic(issueId, epicId) {
-  const url = getUrl(`epic/${epicId}/issue`)
-  const result = await fetchJson(url, state.opts)
-  return result
-}
-
-export async function getIssue(key, fields = '', refresh = false) {
-  let url = `issue/${key}`
-  if (fields) {
-    url += `?fields=${fields}`
-  }
-
-  const result = await fetchJson(getUrl(url), state.opts, refresh)
-  return result
-}
-
-export const getCreateMeta = () => fetchJson(getUrl('issue/createmeta'), state.opts)
-export const assignIssue = (issueId, accountId) =>
-  fetch(getUrl(`issue/${issueId}`), {
-    method: 'PUT',
-    headers: state.headers,
-    body: JSON.stringify({ fields: { assignee: { accountId } } }),
-  })
-
-export const getIssueLinkMeta = () => fetchJson(getUrl`issueLinkType`)
-export const createIssueLink = ({ inwardIssue, outwardIssue, type }) =>
-  fetch(getUrl`issueLink`, {
-    method: 'POST',
-    headers: state.headers,
-    body: JSON.stringify({ inwardIssue, outwardIssue, type }),
-  })
-
-export async function callTransition(issueId, body?) {
-  const url = getUrl(`issue/${issueId}/transitions`)
-  if (!body) return fetchJson(url, { method: 'GET', headers: state.headers }, true)
-  return fetch(url, {
-    method: 'POST',
-    headers: state.headers,
-    body: JSON.stringify(body),
-  })
-}
-
-export const getPriorities = () => fetchJson(getUrl('/priority'))
-export const setPriority = (issueId, priorityId) =>
-  fetch(getUrl(`issue/${issueId}`), {
-    method: 'PUT',
-    headers: state.headers,
-    body: JSON.stringify({ fields: { priority: { id: priorityId } } }),
-  })
-
-function createIssueBodyCreator(title: any, meta: any, type: any, description: any) {
-  return {
-    update: {},
-    fields: {
-      // description,
-      project: { key: state.config.project.key },
-      summary: title,
-      issuetype: {
-        id: meta.projects[0].issuetypes.find(({ name }) => name.toLowerCase() === type.toLowerCase()).id,
-      },
-      description: {
-        type: 'doc',
-        version: 1,
-        content: [
-          {
-            type: 'paragraph',
-            content: [
-              {
-                text: description,
-                type: 'text',
-              },
-            ],
-          },
-        ],
-      },
-    } as any,
-  }
-}
-
-const sep = key => chalk.grey('-'.repeat(40) + key + '-'.repeat(40))
-
-export const searchUser = async partialName =>
-  fetchJson(
-    `${getUrl('user/assignable/multiProjectSearch')}?projectKeys=${state.config.project.key}&query=${partialName}`,
-    state.opts
-  )
-
-// const createParentSettings =
-export async function createIssue({ type, assignee, parent, title, description }) {
-  setDebug(debug)
-  const meta = await getCreateMeta()
-  if (debug) {
-    console.log('meta', JSON.stringify(meta, null, 4))
-    console.log({ type })
-  }
-  const body = createIssueBodyCreator(title, meta, type, description)
-  Object.assign(body.fields, await createIssueParentSettings(parent))
-  if (assignee) {
-    const users = await searchUser(assignee)
-    const _user = users.find(({ emailAddress, displayName }) => {
-      return (
-        emailAddress?.toLowerCase?.() === assignee.toLowerCase() ||
-        displayName?.toLowerCase?.() === assignee.toLowerCase()
-      )
-    })
-    body.fields.assignee = { accountId: _user.accountId }
-  }
-  const url = getUrl('issue')
-  if (debug) {
-    console.log({ url })
-    console.log('request\n', JSON.stringify(body), '\n\n')
-    console.log(`curl --url '${url}' \\
-                -H 'Accept: application/json' \\
-                -H 'Content-Type: application/json' \\
-                -H 'Authorization: ${state.opts.headers['Authorization']}' \\
-                --data-raw '${JSON.stringify(body)}'`)
-  }
-  return fetchJson(url, {
-    method: 'POST',
-    headers: state.headers,
-    body: JSON.stringify(body),
-  })
-}
-
-//@ts-ignore
-async function createIssueParentSettings(parent) {
-  if (parent) {
-    return { parent: { key: parent.toUpperCase() } }
-  }
 }

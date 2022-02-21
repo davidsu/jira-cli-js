@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import React from 'react'
-import App from './components/FuzzyList'
+import App from './components/Fzf'
 import blessed from 'blessed'
 import { render } from 'react-blessed'
 

@@ -1,7 +1,6 @@
 import { reduce } from '@atlaskit/adf-utils'
 import { search } from './api'
-import { Store, createAsyncAction, errorResult, successResult } from 'pullstate'
-import React, { createContext, useCallback, useReducer } from 'react'
+import { Store } from 'pullstate'
 
 const header = {
   key: 'KEY',
@@ -99,21 +98,30 @@ type Initial = {
   search: {
     displayList: Array<string>
     header: string
-    data: Array<any>
   }
+  issueListHeader: string
+  issues: Record<string, Issue>
 }
 
 const initialState: Initial = {
   search: {
     displayList: [],
     header: makeDisplayRow({ issues: [] }, header),
-    data: [],
   },
+  issueListHeader: makeDisplayRow({ issues: [] }, header),
+  issues: {},
 }
 
-const setList = (state, data) => {
-  state.search.displayList = data.issues.map(v => makeDisplayRow(data, v))
-  state.search.rawData = data
+type SetList = (state: Initial, data: { issues: Array<{ key: string; fields: Omit<Issue, 'display'> }> }) => void
+
+const setList: SetList = (state, data) => {
+  const displayList = new Array(data.issues.length)
+  data.issues.forEach((issue, idx) => {
+    const display = makeDisplayRow(data, issue)
+    displayList[idx] = display
+    state.issues[issue.key] = { ...issue.fields, key: issue.key, display }
+  })
+  state.search.displayList = displayList
 }
 
 export const State = new Store(initialState)
@@ -121,6 +129,6 @@ export const State = new Store(initialState)
 export const fetchList = async jql => {
   const { cache, server } = search(`${jql}&fields=${fields}`)
   for (const promise of [cache, server]) {
-    promise.then(data => State.update(state => setList(state, data)))
+    promise?.then(data => State.update(state => setList(state, data)))
   }
 }
