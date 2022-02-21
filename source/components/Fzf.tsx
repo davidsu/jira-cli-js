@@ -4,7 +4,9 @@ import List from './List'
 import Fuse from 'fuse.js'
 import chalk from 'chalk'
 import TextInput from './TextInput'
-import { State } from '../store'
+import { fetchList, State } from '../store'
+import { useStoreState } from 'pullstate'
+import { getDefaultJQL, state } from '../api'
 
 function debounce(func, timeout = 300) {
   let timer
@@ -17,14 +19,18 @@ function debounce(func, timeout = 300) {
 }
 
 const Fzf = () => {
-  const { issueListHeader, issues } = State.useState()
+  const { header, issues } = useStoreState(State, s => ({ header: s.issueListHeader, issues: Object.values(s.issues) }))
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<Issue>[])
-
+  useEffect(() => {
+    const all = false
+    const jql = all ? `project=${state.config.project.key}` : getDefaultJQL()
+    fetchList(jql)
+  }, [])
   const fuse = useMemo(
     () =>
-      new Fuse(Object.values(issues), {
+      new Fuse(issues, {
         useExtendedSearch: true,
         includeMatches: true,
         ignoreFieldNorm: true,
@@ -42,7 +48,7 @@ const Fzf = () => {
         setFilteredList(fuse.search(_query))
         return
       }
-      setFilteredList(Object.values(issues).map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
+      setFilteredList(issues.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
     }, 30),
     [issues, fuse, query]
   )
@@ -66,27 +72,18 @@ const Fzf = () => {
     [filteredList, indexOfFocusId]
   )
 
-  const maxFilterIndicatorLength = useMemo(() => {
-    let calc = Object.keys(issues).length
-    let length = 0
-    while (calc >= 1) {
-      length++
-      calc /= 10
-    }
-    length = Math.max(length, 1)
-    return 3 + length * 2
-  }, [issues])
-  const filteredIndicator = `(${Object.keys(issues).length}/${filteredList.length})`
-  const filteredIndicatorDisplay = chalk.yellow(
-    filteredIndicator + '\u00A0'.repeat(maxFilterIndicatorLength - filteredIndicator.length)
-  )
+  const { filteredIndicatorLength, filteredIndicatorDisplay } = useMemo(() => {
+    const len = String(issues.length).length
+    const label = `(${String(filteredList.length).padStart(len, '\u00A0')}/${issues.length})`
+    const coloredLabel = chalk.yellow(label)
+    return { filteredIndicatorLength: label.length, filteredIndicatorDisplay: coloredLabel }
+  }, [issues, filteredList])
 
-  debugger
   return (
     <>
       <text top={0}>{filteredIndicatorDisplay + chalk.cyan('>\u00A0')}</text>
-      <TextInput top={0} left={filteredIndicator.length + 2} combo={combo} onValueChange={setQuery} />
-      <text top={1}>{chalk.bold(chalk.hex('#90adaf')(issueListHeader))}</text>
+      <TextInput top={0} left={filteredIndicatorLength + 2} combo={combo} onValueChange={setQuery} />
+      <text top={1}>{chalk.bold(chalk.hex('#90adaf')(header))}</text>
       <List list={filteredList.map(t => ({ ...t, item: t.item.display }))} focusedIdx={focusedIdx} focusId={focusId} />
     </>
   )

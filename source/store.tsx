@@ -95,19 +95,11 @@ function makeDisplayRow(data, v): string {
 }
 
 type Initial = {
-  search: {
-    displayList: Array<string>
-    header: string
-  }
   issueListHeader: string
   issues: Record<string, Issue>
 }
 
 const initialState: Initial = {
-  search: {
-    displayList: [],
-    header: makeDisplayRow({ issues: [] }, header),
-  },
   issueListHeader: makeDisplayRow({ issues: [] }, header),
   issues: {},
 }
@@ -121,7 +113,6 @@ const setList: SetList = (state, data) => {
     displayList[idx] = display
     state.issues[issue.key] = { ...issue.fields, key: issue.key, display }
   })
-  state.search.displayList = displayList
 }
 
 export const State = new Store(initialState)
