@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 import React, { useEffect, useRef } from 'react'
 import type { Widgets } from 'blessed'
-import blessed, { textarea, widget } from 'blessed'
+import blessed, { textarea } from 'blessed'
 type TextInputProps = Widgets.TextareaOptions & {
   ref?: ReturnType<typeof useRef>
   onValueChange?: (value: string) => any
@@ -20,8 +20,12 @@ function _updateCursor(this: ReturnType<typeof textarea>) {
   }
 }
 
-type ti = { combo: Record<string, (i?: string, k?: any) => any>; onValueChange: (...args: any) => any }
-function _listener(this: ti & ReturnType<typeof textarea>, ch, key) {
+type TextInputType = {
+  combo: Record<string, (i?: string, k?: any) => any>
+  onValueChange: (...args: any) => any
+} & ReturnType<typeof textarea>
+
+function _listener(this: TextInputType, ch, key) {
   const zero = this.lpos.xi
   const row = this.lpos.yi
   const value = this.value
@@ -67,33 +71,24 @@ function _listener(this: ti & ReturnType<typeof textarea>, ch, key) {
     this.screen.render()
   }
 }
-function textInput(this: any, { combo = {}, onValueChange = noop, ...props }: TextInputProps) {
-  //@ts-ignore
-  if (!(this instanceof widget.Node)) {
-    //@ts-ignore
-    return new textInput({ combo, onValueChange, ...props })
-  }
-  this.combo = combo
-  this.onValueChange = onValueChange
+function textInput(this: any, props: TextInputProps) {
+  Object.assign(this, { _listener, _updateCursor })
   textarea.call(this, { inputOnFocus: true, input: true, ...props })
   this.focus()
 }
-textInput.prototype.__proto__ = textarea.prototype
-textInput.prototype._listener = _listener
-textInput.prototype._updateCursor = _updateCursor
+
+Object.setPrototypeOf(textInput.prototype, textarea.prototype)
 
 //@ts-ignore
 //this is needed cuz this is how blessed-react finds blessed components
-blessed.textinput = textInput
+blessed.textinput = (options: TextInputProps) => new textInput(options)
 
 export default function TextInput({ combo = {}, onValueChange = noop, ref, ...props }: TextInputProps) {
   const TextInputRef: any = ref || useRef(null)
-  useEffect(() => {
-    if (TextInputRef?.current) {
-      TextInputRef.current.combo = combo
-      TextInputRef.current.onValueChange = onValueChange
-    }
-  }, [TextInputRef, combo, onValueChange])
+  useEffect(
+    () => Object.assign(TextInputRef.current || {}, { combo, onValueChange }),
+    [TextInputRef, combo, onValueChange]
+  )
   //@ts-ignore
   return <textinput ref={TextInputRef} combo={combo} onValueChange={onValueChange} {...props} />
 }
