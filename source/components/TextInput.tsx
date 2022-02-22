@@ -1,34 +1,50 @@
 /* eslint-disable no-unused-expressions */
-import type { DetailedBlessedProps, TextareaElement } from 'react-blessed'
 import React, { useEffect, useRef } from 'react'
-import { widget } from 'blessed'
-const refFunc = (ref, func, ...args) => ref.current[func](...args)
-type TextInputProps = Debug<
-  DetailedBlessedProps<TextareaElement> & {
-    ref?: ReturnType<typeof useRef>
-    onValueChange?: (value: string) => any
-    combo?: {
-      [key: string]: (...args: any) => any
-    }
+import type { Widgets } from 'blessed'
+import blessed, { textarea, widget } from 'blessed'
+type TextInputProps = Widgets.TextareaOptions & {
+  ref?: ReturnType<typeof useRef>
+  onValueChange?: (value: string) => any
+  combo?: {
+    [key: string]: (...args: any) => any
   }
->
+}
 const noop = () => {}
 const cursorBackward = (self, offset) => offset > 0 && self.screen.program.cursorBackward()
 const cursorForward = (self, offset) => offset < self.value.length && self.screen.program.cursorForward()
-//@ts-ignore
-widget.Textarea.prototype._updateCursor = function () {
+
+function _updateCursor(this: ReturnType<typeof textarea>) {
   if (this.value === '' && this.lpos) {
     const { xi: col, yi: row } = this.lpos
     this.screen.program.cursorPos(row, col)
   }
 }
-//@ts-ignore
-widget.Textarea.prototype._listener = function (ch, key) {
+
+type ti = { combo: Record<string, (i?: string, k?: any) => any>; onValueChange: (...args: any) => any }
+function _listener(this: ti & ReturnType<typeof textarea>, ch, key) {
   const zero = this.lpos.xi
+  const row = this.lpos.yi
   const value = this.value
   const offset = this.screen.program.x - zero
-  if (/(enter|return)/.test(key.name)) return
+  if (key.ctrl) {
+    ;(this.combo[`ctrl-${key.name}`] || noop)(ch, key)
+    if (key.name === 'a') {
+      this.screen.program.cursorPos(row, zero)
+    }
+    if (key.name === 'e') {
+      this.screen.program.cursorPos(row, zero + this.value.length)
+    }
+    if (key.name === 'u') {
+      this.value = ''
+      this.screen.program.cursorPos(zero, this.lpos.yi)
+    }
+  }
+  if (key.name === 'escape') {
+    ;(this.combo.escape || noop)()
+    return
+  }
 
+  if (/(enter|return)/.test(key.name)) return
   if (key.name === 'left') {
     cursorBackward(this, offset)
   } else if (key.name === 'right') {
@@ -47,52 +63,37 @@ widget.Textarea.prototype._listener = function (ch, key) {
   }
 
   if (this.value !== value) {
+    this.onValueChange(value)
     this.screen.render()
   }
 }
-const navigation = ref => ({
-  'ctrl-a': () => {
-    const { xi: col, yi: row } = ref.current.lpos
-    ref.current.screen.program.cursorPos(row, col)
-  },
-  'ctrl-e': () => {
-    const { xi: col, yi: row } = ref.current.lpos
-    ref.current.screen.program.cursorPos(row, col + ref.current.value.length)
-  },
-  'ctrl-u': () => {
-    const { xi: col, yi: row } = ref.current.lpos
-    ref.current.screen.program.cursorPos(row, col)
-    ref.current.value = ''
-  },
-})
-
-function handleKey({ combo = {}, onValueChange = noop, ref }: TextInputProps) {
-  if (!ref?.current) return
-  global.ref = ref
-  Object.assign(combo, navigation(ref))
-  function onKeyPress(input, key) {
-    if (key.ctrl) {
-      ;(combo[`ctrl-${key.name}`] || noop)(input, key)
-    }
-    if (key.name === 'escape') {
-      ;(combo.escape || noop)()
-    }
-    setTimeout(() => {
-      onValueChange(refFunc(ref, 'getValue'))
-    }, 0)
+function textInput(this: any, { combo = {}, onValueChange = noop, ...props }: TextInputProps) {
+  //@ts-ignore
+  if (!(this instanceof widget.Node)) {
+    //@ts-ignore
+    return new textInput({ combo, onValueChange, ...props })
   }
-
-  if (ref?.current) {
-    refFunc(ref, 'focus')
-    refFunc(ref, 'on', 'keypress', onKeyPress)
-  }
-  return () => refFunc(ref, 'off', 'keypress', onKeyPress)
+  this.combo = combo
+  this.onValueChange = onValueChange
+  textarea.call(this, { inputOnFocus: true, input: true, ...props })
+  this.focus()
 }
-const TextInput = ({ combo = {}, onValueChange = noop, ref, ...props }: TextInputProps) => {
-  const TextInputRef = ref || useRef(null)
-  useEffect(() => handleKey({ combo, onValueChange, ref: TextInputRef }), [TextInputRef, combo, onValueChange])
+textInput.prototype.__proto__ = textarea.prototype
+textInput.prototype._listener = _listener
+textInput.prototype._updateCursor = _updateCursor
 
-  return <textarea inputOnFocus={true} input={true} ref={TextInputRef} {...props} />
+//@ts-ignore
+//this is needed cuz this is how blessed-react finds blessed components
+blessed.textinput = textInput
+
+export default function TextInput({ combo = {}, onValueChange = noop, ref, ...props }: TextInputProps) {
+  const TextInputRef: any = ref || useRef(null)
+  useEffect(() => {
+    if (TextInputRef?.current) {
+      TextInputRef.current.combo = combo
+      TextInputRef.current.onValueChange = onValueChange
+    }
+  }, [TextInputRef, combo, onValueChange])
+  //@ts-ignore
+  return <textinput ref={TextInputRef} combo={combo} onValueChange={onValueChange} {...props} />
 }
-
-export default TextInput
