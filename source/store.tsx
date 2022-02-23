@@ -97,11 +97,13 @@ function makeDisplayRow(data, v): string {
 type Initial = {
   issueListHeader: string
   issues: Record<string, Issue>
+  popup: string
 }
 
 const initialState: Initial = {
   issueListHeader: makeDisplayRow({ issues: [] }, header),
   issues: {},
+  popup: '',
 }
 
 type SetList = (state: Initial, data: { issues: Array<{ key: string; fields: Omit<Issue, 'display'> }> }) => void

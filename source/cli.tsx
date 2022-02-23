@@ -14,6 +14,8 @@ const screen = blessed.screen({
   smartCSR: true,
   title: 'whatever',
 })
+//@ts-ignore
+global.screen = screen
 
 screen.key(['escape', 'C-c', 'q'], () => process.exit(0))
-render(<App />, screen)
+render(<App screen={screen} />, screen)
