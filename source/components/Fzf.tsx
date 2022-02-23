@@ -18,7 +18,8 @@ function debounce(func, timeout = 300) {
   }
 }
 
-const Fzf = () => {
+type FzfProps = { top?: string; left?: string; isFocused: boolean; width?: string; height?: string }
+const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: FzfProps) => {
   const { header, issues } = useStoreState(State, s => ({ header: s.issueListHeader, issues: Object.values(s.issues) }))
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
@@ -80,12 +81,14 @@ const Fzf = () => {
   }, [issues, filteredList])
 
   return (
-    <>
+    <box width={width} height={height} top={top} left={left}>
       <text top={0}>{filteredIndicatorDisplay + chalk.cyan('>\u00A0')}</text>
-      <TextInput top={0} left={filteredIndicatorLength + 2} combo={combo} onValueChange={setQuery} />
+      {isFocused ? (
+        <TextInput top={0} left={filteredIndicatorLength + 2} combo={combo} onValueChange={setQuery} />
+      ) : undefined}
       <text top={1}>{chalk.bold(chalk.hex('#90adaf')(header))}</text>
       <List list={filteredList.map(t => ({ ...t, item: t.item.display }))} focusedIdx={focusedIdx} focusId={focusId} />
-    </>
+    </box>
   )
 }
 

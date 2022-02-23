@@ -74,7 +74,6 @@ function _listener(this: TextInputType, ch, key) {
 function textInput(this: any, props: TextInputProps) {
   Object.assign(this, { _listener, _updateCursor })
   textarea.call(this, { inputOnFocus: true, input: true, ...props })
-  this.focus()
 }
 
 Object.setPrototypeOf(textInput.prototype, textarea.prototype)
@@ -89,6 +88,14 @@ export default function TextInput({ combo = {}, onValueChange = noop, ref, ...pr
     () => Object.assign(TextInputRef.current || {}, { combo, onValueChange }),
     [TextInputRef, combo, onValueChange]
   )
+  useEffect(() => {
+    if (TextInputRef?.current) {
+      TextInputRef.current.focus()
+    }
+    return () => {
+      TextInputRef.current.free()
+    }
+  }, [TextInputRef])
   //@ts-ignore
   return <textinput ref={TextInputRef} combo={combo} onValueChange={onValueChange} {...props} />
 }
