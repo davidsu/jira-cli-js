@@ -4,14 +4,12 @@ import List from './List'
 import Fuse from 'fuse.js'
 import chalk from 'chalk'
 import TextInput from './TextInput'
-import { fetchList, State } from '../store'
-import { useStoreState } from 'pullstate'
+import { fetchList } from '../store'
 import { getDefaultJQL, state } from '../api'
 import type { Widgets } from 'blessed'
 
-type FzfProps = { isFocused: boolean } & Widgets.BoxOptions
-const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: FzfProps) => {
-  const { header, issues } = useStoreState(State, s => ({ header: s.issueListHeader, issues: Object.values(s.issues) }))
+type FzfProps = { isFocused: boolean; header?: string; list: Array<{ display: string }> } & Widgets.BoxOptions
+const Fzf = ({ header, list, isFocused, width = '100%', height = '100%', top = 0, left = 0 }: FzfProps) => {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<Issue>[])
@@ -22,14 +20,14 @@ const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: 
   }, [])
   const fuse = useMemo(
     () =>
-      new Fuse(issues, {
+      new Fuse(list, {
         useExtendedSearch: true,
         includeMatches: true,
         ignoreFieldNorm: true,
         keys: ['display'],
         distance: 3000,
       }),
-    [issues]
+    [list]
   )
   useEffect(() => {
     const _query = (query || '')
@@ -39,8 +37,8 @@ const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: 
       setFilteredList(fuse.search(_query))
       return
     }
-    setFilteredList(issues.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
-  }, [issues, fuse, query])
+    setFilteredList(list.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
+  }, [list, fuse, query])
   const indexOfFocusId = useMemo(
     () => filteredList.findIndex(fuseItem => fuseItem.item.display === focusId),
     [focusId, filteredList]
@@ -62,11 +60,11 @@ const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: 
   )
 
   const { filteredIndicatorLength, filteredIndicatorDisplay } = useMemo(() => {
-    const len = String(issues.length).length
-    const label = `(${String(filteredList.length).padStart(len, '\u00A0')}/${issues.length})`
+    const len = String(list.length).length
+    const label = `(${String(filteredList.length).padStart(len, '\u00A0')}/${list.length})`
     const coloredLabel = chalk.yellow(label)
     return { filteredIndicatorLength: label.length, filteredIndicatorDisplay: coloredLabel }
-  }, [issues, filteredList])
+  }, [list, filteredList])
 
   return (
     <box width={width} height={height} top={top} left={left}>
