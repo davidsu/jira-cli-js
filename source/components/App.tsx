@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import React, { useEffect, useState } from 'react'
 import Debug from './Debug'
-import Fzf from './Fzf'
+import Fzf from './fzf/Fzf'
 import { State } from '../store'
 import { useStoreState } from 'pullstate'
 import type blessed from 'blessed'

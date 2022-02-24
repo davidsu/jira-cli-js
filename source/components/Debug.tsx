@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import React from 'react'
-import Fzf from './Fzf'
+import Fzf from './fzf/Fzf'
 export default function Debug() {
   const list = [{ display: 'firs bob aasdf' }, { display: 'secong' }]
   return (

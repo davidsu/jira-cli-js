@@ -4,8 +4,8 @@ import List from './List'
 import Fuse from 'fuse.js'
 import chalk from 'chalk'
 import TextInput from './TextInput'
-import { fetchList } from '../store'
-import { getDefaultJQL, state } from '../api'
+import { fetchList } from '../../store'
+import { getDefaultJQL, state } from '../../api'
 import type { Widgets } from 'blessed'
 
 type FzfProps = { isFocused: boolean; header?: string; list: Array<{ display: string }> } & Widgets.BoxOptions
