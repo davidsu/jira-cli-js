@@ -67,7 +67,7 @@ function _listener(this: TextInputType, ch, key) {
   }
 
   if (this.value !== value) {
-    this.onValueChange(value)
+    this.onValueChange(this.value)
     this.screen.render()
   }
 }

@@ -7,18 +7,9 @@ import TextInput from './TextInput'
 import { fetchList, State } from '../store'
 import { useStoreState } from 'pullstate'
 import { getDefaultJQL, state } from '../api'
+import type { Widgets } from 'blessed'
 
-function debounce(func, timeout = 300) {
-  let timer
-  return (...args) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => {
-      func(...args)
-    }, timeout)
-  }
-}
-
-type FzfProps = { top?: string; left?: string; isFocused: boolean; width?: string; height?: string }
+type FzfProps = { isFocused: boolean } & Widgets.BoxOptions
 const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: FzfProps) => {
   const { header, issues } = useStoreState(State, s => ({ header: s.issueListHeader, issues: Object.values(s.issues) }))
   const [query, setQuery] = useState('')
@@ -40,19 +31,16 @@ const Fzf = ({ isFocused, width = '100%', height = '100%', top = 0, left = 0 }: 
       }),
     [issues]
   )
-  useEffect(
-    debounce(() => {
-      const _query = (query || '')
-        .replace(/'\s*$/, '')
-        .replace(/(\w+(?:\\\s\w+)+)/g, (_match, g1) => `"${g1.replace(/\\/g, '')}"`) //make it behave like fzf
-      if (fuse.search && _query) {
-        setFilteredList(fuse.search(_query))
-        return
-      }
-      setFilteredList(issues.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
-    }, 30),
-    [issues, fuse, query]
-  )
+  useEffect(() => {
+    const _query = (query || '')
+      .replace(/'\s*$/, '')
+      .replace(/(\w+(?:\\\s\w+)+)/g, (_match, g1) => `"${g1.replace(/\\/g, '')}"`) //make it behave like fzf
+    if (fuse.search && _query) {
+      setFilteredList(fuse.search(_query))
+      return
+    }
+    setFilteredList(issues.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
+  }, [issues, fuse, query])
   const indexOfFocusId = useMemo(
     () => filteredList.findIndex(fuseItem => fuseItem.item.display === focusId),
     [focusId, filteredList]
