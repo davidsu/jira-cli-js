@@ -78,7 +78,6 @@ const Fzf = ({
   const { combo } = useMemo(
     () => ({
       combo: {
-        escape: () => process.exit(0),
         return: () => {
           onAccept(filteredList[indexOfFocusId + 1]?.item.display)
         },

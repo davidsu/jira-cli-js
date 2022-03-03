@@ -48,7 +48,24 @@ function getPopup(popup) {
       return <Debug popup={popup} />
   }
 }
+
+function useProgramEscape(screen) {
+  useEffect(() => {
+    screen.program.on('keypress', (str, key) => {
+      if (key.name === 'escape') {
+        if (State.getRawState().popup) {
+          State.update(s => {
+            s.popup = ''
+          })
+        } else {
+          process.exit(0)
+        }
+      }
+    })
+  }, [screen])
+}
 export default function App({ screen }: { screen: ReturnType<typeof blessed.screen> }) {
+  useProgramEscape(screen)
   const { header, list } = useStoreState(State, s => ({ header: s.issueListHeader, list: Object.values(s.issues) }))
   const popup = useStoreState(State, s => s.popup)
   ctrlDToDebugScreen(screen)
