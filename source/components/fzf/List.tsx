@@ -3,6 +3,7 @@ import type Fuse from 'fuse.js'
 import React from 'react'
 type Props = {
   list: Fuse.FuseResult<string>[]
+  height: number | string
   focusedIdx: number
   focusId: string
 }
@@ -50,10 +51,9 @@ const createRows = (
     .slice(Math.max(focusedIdx - height + 3, 0), Math.max(height - 2, focusedIdx + 1))
     .map((fuseItem, idx) => createRow(fuseItem, width, focusId, idx))
 
-const List = React.memo(function List({ list, focusedIdx, focusId }: Props) {
+const List = React.memo(function List({ list, focusedIdx, focusId, height }: Props) {
   const width = process.stdout.columns
-  const height = process.stdout.rows
-  return <>{createRows(list, focusedIdx, focusId, width, height)}</>
+  return <>{createRows(list, focusedIdx, focusId, width, Number(height) || process.stdout.rows)}</>
 })
 
 export default List

@@ -1,5 +1,5 @@
 import { reduce } from '@atlaskit/adf-utils'
-import { search } from './api'
+import { search, searchUser } from './api'
 import { Store } from 'pullstate'
 
 const header = {
@@ -98,11 +98,13 @@ type Initial = {
   issueListHeader: string
   issues: Record<string, Issue>
   popup: string
+  users: Array<{ displayName: string }>
 }
 
 const initialState: Initial = {
   issueListHeader: makeDisplayRow({ issues: [] }, header),
   issues: {},
+  users: [],
   popup: '',
 }
 
@@ -117,6 +119,10 @@ const setList: SetList = (state, data) => {
   })
 }
 
+const setUsers = (state, data) => {
+  state.users = data
+}
+
 export const State = new Store(initialState)
 // type T = Debug<typeof State>
 
@@ -124,5 +130,11 @@ export const fetchList = async jql => {
   const { cache, server } = search(`${jql}&fields=${fields}`)
   for (const promise of [cache, server]) {
     promise?.then(data => State.update(state => setList(state, data)))
+  }
+}
+export const fetchUsers = async query => {
+  const { cache, server } = searchUser(query)
+  for (const promise of [cache, server]) {
+    promise?.then(data => State.update(state => setUsers(state, data)))
   }
 }

@@ -38,11 +38,13 @@ const Fzf = ({
   height = '100%',
   top = 0,
   left = 0,
+  onQueryChange = () => {},
   ...props
 }: FzfProps) => {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<Issue>[])
+  useEffect(() => onQueryChange(query), [query])
   useEffect(() => {
     const all = false
     const jql = all ? `project=${state.config.project.key}` : getDefaultJQL()
@@ -103,6 +105,7 @@ const Fzf = ({
       <box top={header ? 2 : 1}>
         <List
           list={filteredList.map(t => ({ ...t, item: t.item.display }))}
+          height={Number(height) - 2}
           focusedIdx={focusedIdx}
           focusId={focusId}
         />

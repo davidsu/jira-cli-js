@@ -133,6 +133,13 @@ const fetchJson = (url, options = state.opts) => {
     ...cacheResult(url, options, serverRequest),
   }
 }
+
+export const searchUser = partialName =>
+  fetchJson(
+    `${getUrl('user/assignable/multiProjectSearch')}?projectKeys=${state.config.project.key}&query=${partialName}`,
+    state.opts
+  )
+
 export function search(params = state.JQL) {
   //todo hacky. this must be related to some version the account is in.
   const prefix = /dchamud/.test(state.apiRoot) ? '' : 'jql='
