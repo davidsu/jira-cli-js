@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import React, { useEffect, useState } from 'react'
 import Debug from './Debug'
-import Fzf from './fzf/Fzf'
 import { State } from '../store'
 import { useStoreState } from 'pullstate'
 import type blessed from 'blessed'
 import Edit from './tasks/Edit'
 import Assign from './tasks/Assign'
+import IssueList from './IssueList'
 
 const ctrlDToDebugScreen = screen =>
   useEffect(() => {
@@ -67,7 +67,6 @@ function useProgramEscape(screen) {
 }
 export default function App({ screen }: { screen: ReturnType<typeof blessed.screen> }) {
   useProgramEscape(screen)
-  const { header, list } = useStoreState(State, s => ({ header: s.issueListHeader, list: Object.values(s.issues) }))
   const popup = useStoreState(State, s => s.popup)
   ctrlDToDebugScreen(screen)
   if (hackRerenderOnPopupClose(popup)) {
@@ -76,7 +75,7 @@ export default function App({ screen }: { screen: ReturnType<typeof blessed.scre
   return (
     <box width="100%" height="100%">
       {getPopup(popup)}
-      <Fzf isFocused={!popup} header={header} list={list} />
+      <IssueList />
     </box>
   )
 }

@@ -4,8 +4,6 @@ import List from './List'
 import Fuse from 'fuse.js'
 import chalk from 'chalk'
 import TextInput from './TextInput'
-import { fetchList } from '../../store'
-import { getDefaultJQL, state } from '../../api'
 import type { Widgets } from 'blessed'
 import { resetColors } from '../../utils'
 
@@ -45,11 +43,6 @@ const Fzf = ({
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<Issue>[])
   useEffect(() => onQueryChange(query), [query])
-  useEffect(() => {
-    const all = false
-    const jql = all ? `project=${state.config.project.key}` : getDefaultJQL()
-    fetchList(jql)
-  }, [])
   const fuse = useMemo(
     () =>
       new Fuse(list, {
