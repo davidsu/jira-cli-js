@@ -2,13 +2,16 @@ import chalk from 'chalk'
 import React, { useEffect, useState } from 'react'
 import Fzf from '../fzf/Fzf'
 import { State } from '../../store'
-import { resetColors } from '../../utils'
 import { useStoreState } from 'pullstate'
 import { searchUser } from '../../api'
-const onAccept = value =>
+import { popups } from '../../consts'
+const onAccept = () => {
+  // const user = users.find(({ displayName }) => name === displayName)
+  // assignIssue(issueId, user.accountId), `assigning issue ${issueId} to ${name}`
   State.update(s => {
-    s.popup = resetColors(value)
+    s.popup = popups.edit
   })
+}
 export default function Assign() {
   const [query, setQuery] = useState('')
   const { list } = useStoreState(State, s => ({ list: s.users.map(({ displayName }) => ({ display: displayName })) }))

@@ -97,7 +97,7 @@ export default function TextInput({ combo = {}, onValueChange = noop, ref, ...pr
       TextInputRef.current.focus()
     }
     return () => {
-      TextInputRef.current.free()
+      TextInputRef?.current?.free?.()
     }
   }, [TextInputRef])
   //@ts-ignore

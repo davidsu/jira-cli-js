@@ -5,15 +5,17 @@ import Fuse from 'fuse.js'
 import chalk from 'chalk'
 import TextInput from './TextInput'
 import type { Widgets } from 'blessed'
-import { resetColors } from '../../utils'
+import { debounce, resetColors } from '../../utils'
 
-type FzfProps = Debug<
+type FzfProps<T extends { display: string } | string> = Debug<
   {
-    onAccept?: (value?: string) => unknown
+    onSelectionChange?: (selected: string) => unknown
+    onQueryChange?: (query: string) => unknown
+    onAccept?: (value: T) => unknown
     promptType?: string
     isFocused: boolean
     header?: string
-    list: Array<{ display: string } | string>
+    list: Array<T>
   } & Widgets.BoxOptions
 >
 
@@ -26,9 +28,20 @@ const prompts = {
     }, [list, filteredList])
   },
 }
-const Fzf = ({
+
+function syncParent({ onSelectionChange, onQueryChange, query, focusId }) {
+  useEffect(() => {
+    onQueryChange(query)
+  }, [query])
+  useEffect(() => {
+    onSelectionChange(focusId)
+  }, [focusId])
+}
+function Fzf<T extends { display: string }>({
   promptType = 'fzf',
   onAccept = () => {},
+  onQueryChange = () => {},
+  onSelectionChange = () => {},
   header,
   list,
   isFocused,
@@ -36,13 +49,17 @@ const Fzf = ({
   height = '100%',
   top = 0,
   left = 0,
-  onQueryChange = () => {},
   ...props
-}: FzfProps) => {
+}: FzfProps<T>) {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
-  const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<Issue>[])
-  useEffect(() => onQueryChange(query), [query])
+  const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<T>[])
+  syncParent({ onSelectionChange, onQueryChange, query, focusId })
+  useEffect(() => {
+    if (list?.length) {
+      setFocusId(list[0].display)
+    }
+  }, [list, filteredList])
   const fuse = useMemo(
     () =>
       new Fuse(list, {
@@ -62,7 +79,7 @@ const Fzf = ({
       setFilteredList(fuse.search(_query))
       return
     }
-    setFilteredList(list.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<Issue>[]>)
+    setFilteredList(list.map(item => ({ item })) as SetStateAction<Fuse.FuseResult<T>[]>)
   }, [list, fuse, query])
   const indexOfFocusId = useMemo(
     () => filteredList.findIndex(fuseItem => fuseItem.item.display === focusId),
@@ -74,7 +91,7 @@ const Fzf = ({
     () => ({
       combo: {
         return: () => {
-          onAccept(filteredList[indexOfFocusId + 1]?.item.display)
+          onAccept(filteredList[indexOfFocusId]?.item || filteredList[0]?.item || list[0])
         },
         'ctrl-n': () => setFocusId(filteredList[indexOfFocusId + 1]?.item.display || ''),
         'ctrl-p': () => {

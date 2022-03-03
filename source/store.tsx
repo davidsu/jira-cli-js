@@ -99,6 +99,7 @@ type Initial = {
   issues: Record<string, Issue>
   popup: string
   users: Array<{ displayName: string }>
+  selectedIssue: string
 }
 
 const initialState: Initial = {
@@ -106,6 +107,7 @@ const initialState: Initial = {
   issues: {},
   users: [],
   popup: '',
+  selectedIssue: '',
 }
 
 type SetList = (state: Initial, data: { issues: Array<{ key: string; fields: Omit<Issue, 'display'> }> }) => void
@@ -120,6 +122,7 @@ const setList: SetList = (state, data) => {
 }
 
 export const State = new Store(initialState)
+global.State = State
 // type T = Debug<typeof State>
 
 export const fetchList = async jql => {

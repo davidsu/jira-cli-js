@@ -7,6 +7,7 @@ import type blessed from 'blessed'
 import Edit from './tasks/Edit'
 import Assign from './tasks/Assign'
 import IssueList from './IssueList'
+import { popups } from '../consts'
 
 const ctrlDToDebugScreen = screen =>
   useEffect(() => {
@@ -16,7 +17,7 @@ const ctrlDToDebugScreen = screen =>
           if (s.popup) {
             s.popup = ''
           } else {
-            s.popup = 'debug'
+            s.popup = popups.edit
           }
         })
       }
@@ -35,10 +36,12 @@ const hackRerenderOnPopupClose = popup => {
 
 function getPopup(popup) {
   switch (popup) {
-    case 'debug':
+    case popups.edit:
       return <Edit popup={popup} />
-    case 'assignee':
+    case popups.assignee:
       return <Assign popup={popup} />
+    case popups.debug:
+      return <Debug popup={popup} />
     case 'link':
       return <Debug popup={popup} />
     case 'parent':
@@ -75,7 +78,7 @@ export default function App({ screen }: { screen: ReturnType<typeof blessed.scre
   return (
     <box width="100%" height="100%">
       {getPopup(popup)}
-      <IssueList />
+      <IssueList popup={popup} />
     </box>
   )
 }

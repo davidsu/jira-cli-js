@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import Fzf from './fzf/Fzf'
 import { fetchList, State } from './../store'
 import { useStoreState } from 'pullstate'
 import { getDefaultJQL, state } from './../api'
-export default function IssueList() {
+export default function IssueList({ popup }: { popup: string }) {
   const { header, list } = useStoreState(State, s => ({ header: s.issueListHeader, list: Object.values(s.issues) }))
-  const popup = useStoreState(State, s => s.popup)
+  const updateSelectedIssue = useCallback(issue => {
+    State.update(s => {
+      s.selectedIssue = issue
+    })
+  }, [])
   useEffect(() => {
     const all = false
     const jql = all ? `project=${state.config.project.key}` : getDefaultJQL()
@@ -14,7 +18,7 @@ export default function IssueList() {
 
   return (
     <box>
-      <Fzf isFocused={!popup} header={header} list={list} />
+      <Fzf onSelectionChange={updateSelectedIssue} isFocused={!popup} header={header} list={list} />
     </box>
   )
 }
