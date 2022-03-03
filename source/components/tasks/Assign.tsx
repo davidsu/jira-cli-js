@@ -1,9 +1,10 @@
 import chalk from 'chalk'
 import React, { useEffect, useState } from 'react'
 import Fzf from '../fzf/Fzf'
-import { fetchUsers, State } from '../../store'
+import { State } from '../../store'
 import { resetColors } from '../../utils'
 import { useStoreState } from 'pullstate'
+import { searchUser } from '../../api'
 const onAccept = value =>
   State.update(s => {
     s.popup = resetColors(value)
@@ -13,7 +14,13 @@ export default function Assign() {
   const { list } = useStoreState(State, s => ({ list: s.users.map(({ displayName }) => ({ display: displayName })) }))
 
   useEffect(() => {
-    fetchUsers(query)
+    const { cache, server } = searchUser(query)
+    const promise = cache || server
+    promise?.then(data =>
+      State.update(state => {
+        state.users = data
+      })
+    )
   }, [query])
   return (
     <box height="50%" width="50%" top="center" left="center">
