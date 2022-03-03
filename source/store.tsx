@@ -118,6 +118,7 @@ const setList: SetList = (state, data) => {
 }
 
 export const State = new Store(initialState)
+// type T = Debug<typeof State>
 
 export const fetchList = async jql => {
   const { cache, server } = search(`${jql}&fields=${fields}`)

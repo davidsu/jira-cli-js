@@ -26,10 +26,14 @@ type TextInputType = {
 } & ReturnType<typeof textarea>
 
 function _listener(this: TextInputType, ch, key) {
+  if (!this.lpos) return
   const zero = this.lpos.xi
   const row = this.lpos.yi
   const value = this.value
   const offset = this.screen.program.x - zero
+  if (key.full === 'enter') {
+    this.combo.return?.()
+  }
   if (key.ctrl) {
     ;(this.combo[`ctrl-${key.name}`] || noop)(ch, key)
     if (key.name === 'a') {

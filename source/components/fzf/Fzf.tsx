@@ -7,9 +7,39 @@ import TextInput from './TextInput'
 import { fetchList } from '../../store'
 import { getDefaultJQL, state } from '../../api'
 import type { Widgets } from 'blessed'
+import { resetColors } from '../../utils'
 
-type FzfProps = { isFocused: boolean; header?: string; list: Array<{ display: string }> } & Widgets.BoxOptions
-const Fzf = ({ header, list, isFocused, width = '100%', height = '100%', top = 0, left = 0 }: FzfProps) => {
+type FzfProps = Debug<
+  {
+    onAccept?: (value?: string) => unknown
+    promptType?: string
+    isFocused: boolean
+    header?: string
+    list: Array<{ display: string } | string>
+  } & Widgets.BoxOptions
+>
+
+const prompts = {
+  fzf(list, filteredList) {
+    return useMemo(() => {
+      const len = String(list.length).length
+      const label = `(${String(filteredList.length).padStart(len, '\u00A0')}/${list.length})`
+      return chalk.yellow(label) + chalk.cyan('>\u00A0')
+    }, [list, filteredList])
+  },
+}
+const Fzf = ({
+  promptType = 'fzf',
+  onAccept = () => {},
+  header,
+  list,
+  isFocused,
+  width = '100%',
+  height = '100%',
+  top = 0,
+  left = 0,
+  ...props
+}: FzfProps) => {
   const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<Issue>[])
@@ -49,6 +79,9 @@ const Fzf = ({ header, list, isFocused, width = '100%', height = '100%', top = 0
     () => ({
       combo: {
         escape: () => process.exit(0),
+        return: () => {
+          onAccept(filteredList[indexOfFocusId + 1]?.item.display)
+        },
         'ctrl-n': () => setFocusId(filteredList[indexOfFocusId + 1]?.item.display || ''),
         'ctrl-p': () => {
           const idx = indexOfFocusId > 0 ? indexOfFocusId - 1 : filteredList.length - 1
@@ -59,21 +92,22 @@ const Fzf = ({ header, list, isFocused, width = '100%', height = '100%', top = 0
     [filteredList, indexOfFocusId]
   )
 
-  const { filteredIndicatorLength, filteredIndicatorDisplay } = useMemo(() => {
-    const len = String(list.length).length
-    const label = `(${String(filteredList.length).padStart(len, '\u00A0')}/${list.length})`
-    const coloredLabel = chalk.yellow(label)
-    return { filteredIndicatorLength: label.length, filteredIndicatorDisplay: coloredLabel }
-  }, [list, filteredList])
+  const prompt = prompts[promptType]?.(list, filteredList) || promptType
 
   return (
-    <box width={width} height={height} top={top} left={left}>
-      <text top={0}>{filteredIndicatorDisplay + chalk.cyan('>\u00A0')}</text>
+    <box width={width} height={height} top={top} left={left} {...props}>
+      <text top={0}>{prompt}</text>
       {isFocused ? (
-        <TextInput top={0} left={filteredIndicatorLength + 2} combo={combo} onValueChange={setQuery} />
+        <TextInput top={0} left={resetColors(prompt).length} combo={combo} onValueChange={setQuery} />
       ) : undefined}
-      <text top={1}>{chalk.bold(chalk.hex('#90adaf')(header))}</text>
-      <List list={filteredList.map(t => ({ ...t, item: t.item.display }))} focusedIdx={focusedIdx} focusId={focusId} />
+      {header && <text top={1}>{chalk.bold(chalk.hex('#90adaf')(header))}</text>}
+      <box top={header ? 2 : 1}>
+        <List
+          list={filteredList.map(t => ({ ...t, item: t.item.display }))}
+          focusedIdx={focusedIdx}
+          focusId={focusId}
+        />
+      </box>
     </box>
   )
 }

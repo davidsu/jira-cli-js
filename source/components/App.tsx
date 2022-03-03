@@ -5,6 +5,7 @@ import Fzf from './fzf/Fzf'
 import { State } from '../store'
 import { useStoreState } from 'pullstate'
 import type blessed from 'blessed'
+import Edit from './edit/Edit'
 
 const ctrlDToDebugScreen = screen =>
   useEffect(() => {
@@ -31,6 +32,22 @@ const hackRerenderOnPopupClose = popup => {
   return oldPopup && !popup
 }
 
+function getPopup(popup) {
+  switch (popup) {
+    case 'debug':
+      return <Edit popup={popup} />
+    case 'assignee':
+      return <Debug popup={popup} />
+    case 'link':
+      return <Debug popup={popup} />
+    case 'parent':
+      return <Debug popup={popup} />
+    case 'priority':
+      return <Debug popup={popup} />
+    case 'transition':
+      return <Debug popup={popup} />
+  }
+}
 export default function App({ screen }: { screen: ReturnType<typeof blessed.screen> }) {
   const { header, list } = useStoreState(State, s => ({ header: s.issueListHeader, list: Object.values(s.issues) }))
   const popup = useStoreState(State, s => s.popup)
@@ -40,8 +57,8 @@ export default function App({ screen }: { screen: ReturnType<typeof blessed.scre
   }
   return (
     <box width="100%" height="100%">
-      {popup === 'debug' ? <Debug /> : undefined}
-      <Fzf isFocused={!popup} header={header} list={list} width="100%" height="100%" />
+      {getPopup(popup)}
+      <Fzf isFocused={!popup} header={header} list={list} />
     </box>
   )
 }

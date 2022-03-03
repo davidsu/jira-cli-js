@@ -33,7 +33,7 @@ function createRow(fuseItem: Fuse.FuseResult<string>, width: number, focusId: st
   let coloredItem = createMatchedTextNode(fuseItem, width)
   const color = fuseItem.item === focusId ? chalk.bgHex('#282828').hex('#F0F0F0')(coloredItem) : coloredItem
   return (
-    <text top={2 + idx} key={fuseItem.item}>
+    <text top={idx} key={fuseItem.item}>
       {color}
     </text>
   )

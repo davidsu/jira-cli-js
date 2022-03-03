@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import React from 'react'
-import Fzf from './fzf/Fzf'
-export default function Debug() {
-  const list = [{ display: 'firs bob aasdf' }, { display: 'secong' }]
+export default function Debug({ content, popup }: { content?: string; popup?: string }) {
   return (
-    <Fzf isFocused={true} top="center" left="center" list={list} header="some random header" height="50%" width="50%" />
+    <box height="50%" width="50%" top="center" left="center">
+      <box height="50%" width="50%" top="center" left="center">
+        {content || popup}
+      </box>
+    </box>
   )
 }

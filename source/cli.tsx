@@ -4,11 +4,15 @@ import App from './components/App'
 import blessed from 'blessed'
 import { render } from 'react-blessed'
 
-//@ts-ignore
-global.requestAnimationFrame = f => {
-  setImmediate(() => f(Date.now()))
+const debug = process.argv.includes('--debug')
+if (!debug) {
+  const enterAltScreenCommand = '\x1b[?1049h'
+  const leaveAltScreenCommand = '\x1b[?1049l'
+  process.stdout.write(enterAltScreenCommand)
+  process.on('exit', () => {
+    process.stdout.write(leaveAltScreenCommand)
+  })
 }
-global.cancelAnimationFrame = () => {}
 const screen = blessed.screen({
   autoPadding: true,
   smartCSR: true,
