@@ -3,18 +3,23 @@ import React, { useEffect, useState } from 'react'
 import Fzf from '../fzf/Fzf'
 import { State } from '../../store'
 import { useStoreState } from 'pullstate'
-import { searchUser } from '../../api'
+import { assignIssue, searchUser } from '../../api'
 import { popups } from '../../consts'
-const onAccept = () => {
-  // const user = users.find(({ displayName }) => name === displayName)
-  // assignIssue(issueId, user.accountId), `assigning issue ${issueId} to ${name}`
+import Popup from '../Popup'
+import { spinner } from '../../utils'
+
+const onAccept = ({ display }) => {
+  const state = State.getRawState()
+  const user = state.users.find(({ displayName }) => display === displayName)!
+  const promise = assignIssue(state.selectedIssue, user.accountId)
+  spinner(`assign to ${user.displayName}`, promise)
   State.update(s => {
     s.popup = popups.edit
   })
 }
 export default function Assign() {
   const [query, setQuery] = useState('')
-  const { list } = useStoreState(State, s => ({ list: s.users.map(({ displayName }) => ({ display: displayName })) }))
+  const list = useStoreState(State, s => s.users.map(({ displayName }) => ({ display: displayName })))
 
   useEffect(() => {
     const { cache, server } = searchUser(query)
@@ -26,7 +31,7 @@ export default function Assign() {
     )
   }, [query])
   return (
-    <box height="50%" width="50%" top="center" left="center">
+    <Popup>
       <Fzf
         height={Math.floor(process.stdout.rows / 2)}
         onQueryChange={setQuery}
@@ -36,6 +41,6 @@ export default function Assign() {
         border={{ fg: 246, type: 'line' }}
         list={list}
       />
-    </box>
+    </Popup>
   )
 }

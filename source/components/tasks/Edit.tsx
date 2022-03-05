@@ -4,6 +4,7 @@ import Fzf from '../fzf/Fzf'
 import { State } from '../../store'
 import { resetColors } from '../../utils'
 import { popups } from '../../consts'
+import Popup from '../Popup'
 const onAccept = ({ display }) => {
   State.update(s => {
     const popup = resetColors(display)
@@ -15,14 +16,13 @@ export default function Edit() {
     display: chalk.blue(display),
   }))
   return (
-    <box height="50%" width="50%" top="center" left="center">
+    <Popup>
       <Fzf
         onAccept={onAccept}
         isFocused={true}
         promptType={`${chalk.green('?')} ${chalk.bold.ansi256(255)('what would you like to do? ')}`}
-        border={{ fg: 246, type: 'line' }}
         list={list}
       />
-    </box>
+    </Popup>
   )
 }

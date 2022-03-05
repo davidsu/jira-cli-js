@@ -94,11 +94,19 @@ function makeDisplayRow(data, v): string {
   ].join(' ')
 }
 
+type User = {
+  self: string //url
+  accountId: string //WTF
+  displayName: 'david susskind'
+  timeZone: 'Asia/Jerusalem'
+  locale: 'en_US'
+}
 type Initial = {
   issueListHeader: string
   issues: Record<string, Issue>
+  runningTasks: Array<{ display: string }>
   popup: string
-  users: Array<{ displayName: string }>
+  users: Array<User>
   selectedIssue: string
 }
 
@@ -106,6 +114,7 @@ const initialState: Initial = {
   issueListHeader: makeDisplayRow({ issues: [] }, header),
   issues: {},
   users: [],
+  runningTasks: [],
   popup: '',
   selectedIssue: '',
 }
@@ -122,6 +131,14 @@ const setList: SetList = (state, data) => {
 }
 
 export const State = new Store(initialState)
+State.createReaction(
+  s => s.popup,
+  (popup, state) => {
+    if (!popup) {
+      state.runningTasks = []
+    }
+  }
+)
 global.State = State
 // type T = Debug<typeof State>
 
