@@ -13,6 +13,14 @@ if (!debug) {
     process.stdout.write(leaveAltScreenCommand)
   })
 }
+
+//tell react to shut up about browser not supporting requestAnimationFrame
+global.requestAnimationFrame = f => {
+  setImmediate(() => f(Date.now()))
+  return 1
+}
+global.cancelAnimationFrame = () => {}
+
 const screen = blessed.screen({
   autoPadding: true,
   smartCSR: true,

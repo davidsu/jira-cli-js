@@ -34,6 +34,7 @@ export default function Assign() {
     <Popup>
       <Fzf
         height={Math.floor(process.stdout.rows / 2)}
+        query={query}
         onQueryChange={setQuery}
         onAccept={onAccept}
         isFocused={true}

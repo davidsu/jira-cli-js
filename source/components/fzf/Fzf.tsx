@@ -5,10 +5,11 @@ import Fuse from 'fuse.js'
 import chalk from 'chalk'
 import TextInput from './TextInput'
 import type { Widgets } from 'blessed'
-import { debounce, resetColors } from '../../utils'
+import { resetColors } from '../../utils'
 
 type FzfProps<T extends { display: string } | string> = Debug<
   {
+    query: string
     onSelectionChange?: (selected: string) => unknown
     onQueryChange?: (query: string) => unknown
     onAccept?: (value: T) => unknown
@@ -41,6 +42,7 @@ function Fzf<T extends { display: string }>({
   promptType = 'fzf',
   onAccept = () => {},
   onQueryChange = () => {},
+  query,
   onSelectionChange = () => {},
   header,
   list,
@@ -51,7 +53,6 @@ function Fzf<T extends { display: string }>({
   left = 0,
   ...props
 }: FzfProps<T>) {
-  const [query, setQuery] = useState('')
   const [focusId, setFocusId] = useState('')
   const [filteredList, setFilteredList] = useState([] as Fuse.FuseResult<T>[])
   syncParent({ onSelectionChange, onQueryChange, query, focusId })
@@ -108,9 +109,14 @@ function Fzf<T extends { display: string }>({
   return (
     <box width={width} height={height} top={top} left={left} {...props}>
       <text top={0}>{prompt}</text>
-      {isFocused ? (
-        <TextInput top={0} left={resetColors(prompt).length} combo={combo} onValueChange={setQuery} />
-      ) : undefined}
+      <TextInput
+        isFocused={isFocused}
+        content={query}
+        top={0}
+        left={resetColors(prompt).length}
+        combo={combo}
+        onValueChange={onQueryChange}
+      />
       {header && <text top={1}>{chalk.bold(chalk.hex('#90adaf')(header))}</text>}
       <box top={header ? 2 : 1}>
         <List

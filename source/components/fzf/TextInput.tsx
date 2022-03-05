@@ -20,6 +20,15 @@ function _updateCursor(this: ReturnType<typeof textarea>) {
   }
 }
 
+function forceResetCursor(this: ReturnType<typeof textarea>, count = 0) {
+  if (count > 5) return
+  if (this.lpos) {
+    const { xi: col, yi: row } = this.lpos
+    this.screen.program.cursorPos(row, col + this.value.length)
+  } else {
+    setTimeout(() => forceResetCursor.call(this, count + 1), 50)
+  }
+}
 type TextInputType = {
   combo: Record<string, (i?: string, k?: any) => any>
   onValueChange: (...args: any) => any
@@ -77,7 +86,8 @@ function _listener(this: TextInputType, ch, key) {
 }
 function textInput(this: any, props: TextInputProps) {
   Object.assign(this, { _listener, _updateCursor })
-  textarea.call(this, { inputOnFocus: true, input: true, ...props })
+  textarea.call(this, { inputOnFocus: props.isFocused, input: true, ...props })
+  this.value = props.content || ''
 }
 
 Object.setPrototypeOf(textInput.prototype, textarea.prototype)
@@ -86,7 +96,7 @@ Object.setPrototypeOf(textInput.prototype, textarea.prototype)
 //this is needed cuz this is how blessed-react finds blessed components
 blessed.textinput = (options: TextInputProps) => new textInput(options)
 
-export default function TextInput({ combo = {}, onValueChange = noop, ref, ...props }: TextInputProps) {
+export default function TextInput({ combo = {}, isFocused, onValueChange = noop, ref, ...props }: TextInputProps) {
   const TextInputRef: any = ref || useRef(null)
   useEffect(
     () => Object.assign(TextInputRef.current || {}, { combo, onValueChange }),
@@ -95,11 +105,15 @@ export default function TextInput({ combo = {}, onValueChange = noop, ref, ...pr
   useEffect(() => {
     if (TextInputRef?.current) {
       TextInputRef.current.focus()
+      forceResetCursor.call(TextInputRef.current)
     }
     return () => {
       TextInputRef?.current?.free?.()
     }
   }, [TextInputRef])
-  //@ts-ignore
-  return <textinput ref={TextInputRef} combo={combo} onValueChange={onValueChange} {...props} />
+  if (isFocused) {
+    //@ts-ignore
+    return <textinput isFocused={isFocused} ref={TextInputRef} combo={combo} onValueChange={onValueChange} {...props} />
+  }
+  return <text {...props} />
 }

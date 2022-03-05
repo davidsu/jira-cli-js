@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import React from 'react'
+import React, { useState } from 'react'
 import Fzf from '../fzf/Fzf'
 import { State } from '../../store'
 import { resetColors } from '../../utils'
@@ -12,6 +12,7 @@ const onAccept = ({ display }) => {
   })
 }
 export default function Edit() {
+  const [query, setQuery] = useState('')
   const list = ['assignee', 'link', 'parent', 'priority', 'transition'].map(display => ({
     display: chalk.blue(display),
   }))
@@ -19,6 +20,8 @@ export default function Edit() {
     <Popup>
       <Fzf
         onAccept={onAccept}
+        query={query}
+        onQueryChange={setQuery}
         isFocused={true}
         promptType={`${chalk.green('?')} ${chalk.bold.ansi256(255)('what would you like to do? ')}`}
         list={list}

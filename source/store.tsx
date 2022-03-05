@@ -108,6 +108,7 @@ type Initial = {
   popup: string
   users: Array<User>
   selectedIssue: string
+  issueList: { query: string }
 }
 
 const initialState: Initial = {
@@ -117,6 +118,7 @@ const initialState: Initial = {
   runningTasks: [],
   popup: '',
   selectedIssue: '',
+  issueList: { query: '' },
 }
 
 type SetList = (state: Initial, data: { issues: Array<{ key: string; fields: Omit<Issue, 'display'> }> }) => void
