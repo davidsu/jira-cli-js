@@ -12,7 +12,7 @@ export default function IssueList({ popup }: { popup: string }) {
   const { header, list } = useStoreState(State, s => ({ header: s.issueListHeader, list: Object.values(s.issues) }))
   const updateSelectedIssue = useCallback(issue => {
     State.update(s => {
-      s.selectedIssue = issue.replace(/.*?(\w+-\d).*/, '$1')
+      s.selectedIssue = issue.replace(/.*?(\w+-\d+).*/, '$1')
     })
   }, [])
   useEffect(() => {
