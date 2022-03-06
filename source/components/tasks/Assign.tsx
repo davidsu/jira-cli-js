@@ -1,7 +1,7 @@
 import chalk from 'chalk'
 import React, { useEffect, useState } from 'react'
 import Fzf from '../fzf/Fzf'
-import { State } from '../../store'
+import { State, indicateRefresh } from '../../store'
 import { useStoreState } from 'pullstate'
 import { assignIssue, searchUser } from '../../api'
 import { popups } from '../../consts'
@@ -11,7 +11,7 @@ import { spinner } from '../../utils'
 const onAccept = ({ display }) => {
   const state = State.getRawState()
   const user = state.users.find(({ displayName }) => display === displayName)!
-  const promise = assignIssue(state.selectedIssue, user.accountId)
+  const promise = assignIssue(state.selectedIssue, user.accountId).then(indicateRefresh)
   spinner(`assign to ${user.displayName}`, promise)
   State.update(s => {
     s.popup = popups.edit

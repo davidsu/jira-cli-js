@@ -109,6 +109,7 @@ type Initial = {
   users: Array<User>
   selectedIssue: string
   issueList: { query: string }
+  refresh: number
 }
 
 const initialState: Initial = {
@@ -119,15 +120,14 @@ const initialState: Initial = {
   popup: '',
   selectedIssue: '',
   issueList: { query: '' },
+  refresh: 0,
 }
 
 type SetList = (state: Initial, data: { issues: Array<{ key: string; fields: Omit<Issue, 'display'> }> }) => void
 
 const setList: SetList = (state, data) => {
-  const displayList = new Array(data.issues.length)
-  data.issues.forEach((issue, idx) => {
+  data.issues.forEach(issue => {
     const display = makeDisplayRow(data, issue)
-    displayList[idx] = display
     state.issues[issue.key] = { ...issue.fields, key: issue.key, display }
   })
 }
@@ -142,10 +142,14 @@ State.createReaction(
   }
 )
 global.State = State
-// type T = Debug<typeof State>
 
-export const fetchList = async jql => {
-  const { cache, server } = search(`${jql}&fields=${fields}`)
+export const indicateRefresh = () =>
+  State.update(s => {
+    s.refresh++
+  })
+
+export const fetchList = async (jql, startAt = 0) => {
+  const { cache, server } = search(`${jql}&fields=${fields}&startAt=${startAt}`)
   for (const promise of [cache, server]) {
     promise?.then(data => State.update(state => setList(state, data)))
   }
